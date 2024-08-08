@@ -3,7 +3,9 @@ use std::ffi::OsStr;
 use std::io;
 use std::io::stdout;
 use std::io::Write;
+use std::process::exit;
 use std::process::Command;
+use std::process::Stdio;
 use std::path::Path;
 
 fn main() {
@@ -16,14 +18,17 @@ fn main() {
         }
 
         // Parse user input
-        let (command_name, args) = parse_input();
+        let (command, args) = parse_input();
 
         // Execute built-in commands
-        if command_name == "cd" {
+        if command == "cd" {
             cd(args);
+
+        } else if command == "exit" {
+            exit(0);
         } else {
             // Execute external commands
-            execute_command(&command_name, args);
+            execute_command(&command, args);
         }
     }
 }
@@ -43,10 +48,10 @@ fn cd(args: Vec<String>) -> bool {
     }
 }
 
-fn execute_command(command_name: &str, args: Vec<String>) {
+fn execute_command(command: &str, args: Vec<String>) {
     let args_slice: Vec<&OsStr> = args.iter().map(AsRef::as_ref).collect();
 
-    match Command::new(command_name).args(args_slice).spawn() {
+    match Command::new(command).args(args_slice).spawn() {
         Ok(mut cmd) => {
             if let Err(err) = cmd.wait() {
                 eprintln!("Error executing command: {}", err);
@@ -62,11 +67,64 @@ fn parse_input() -> (String, Vec<String>) {
         eprintln!("Error reading input: {}", err);
     }
 
+    if check_pipes(input.clone().as_str()) {
+        let mut commands = input.trim().split(" | ").peekable();
+
+        while let Some(command) = commands.next() {
+            let mut parts = command.trim().split_whitespace();
+            let command   = parts.next().unwrap();
+            let args      = parts;
+
+            let mut prev_command = None;
+
+            let stdin = prev_command
+                .map_or(Stdio::inherit(), |output: std::process::Child| Stdio::from(output.stdout.unwrap()));
+
+            let stdout = if commands.peek().is_some() {
+                Stdio::piped()
+            } else {
+                Stdio::inherit()
+            };
+
+            let output = Command::new(command)
+                .args(args)
+                .stdin(stdin)
+                .stdout(stdout)
+                .spawn();
+
+            match output {
+                        Ok(output) => { prev_command = Some(output); },
+                        Err(e) => {
+                            prev_command = None;
+                            eprintln!("{}", e);
+                        },
+                    };
+
+            if let Some(mut final_command) = prev_command {
+                match final_command.wait() {
+                    Ok(_) => {},
+                    Err(err) => eprintln!("{}", err),
+                }
+            }
+        }
+    }
+
     // Parse input into command name and arguments
-    let mut sanitized_input = input.trim().split_whitespace();
+    let mut input_tokens = input.trim().split_whitespace();
 
-    let command_name = sanitized_input.next().unwrap_or_default().to_string();
-    let args: Vec<String> = sanitized_input.map(|s| s.to_string()).collect();
+    let command = input_tokens.next().unwrap_or_default().to_string();
+    let args: Vec<String> = input_tokens.map(|s| s.to_string()).collect();
 
-    (command_name, args)
+    (command, args)
+}
+
+fn check_pipes(input: &str) -> bool {
+    let trimmed = input.trim();
+    let segments: Vec<&str> = trimmed.split(" | ").collect();
+
+    if segments.len() >= 2 {
+        return true;
+    } else {
+        return false;
+    }
 }

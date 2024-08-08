@@ -1,0 +1,62 @@
+* Shell Implementation TODO List
+  - [-] Command Parsing
+    - [X] Tokenization: Break input into commands and arguments.
+    - [ ] Redirection: Handle input/output redirection (e.g., `>`, `<`, `>>`).
+    - [ ] Pipes: Manage command pipelines (e.g., `|`).
+    - [ ] Background Execution: Support background processes (e.g., `&`).
+
+  - [ ] Command Execution
+    - [ ] Process Creation: Use system calls like `fork()` to create processes.
+    - [ ] Execution: Use `exec()` family of functions to execute commands.
+    - [ ] Wait/Non-Blocking: Manage process synchronization with `wait()` or similar mechanisms.
+
+  - [-] Built-in Commands
+    - [X] Changing Directory: Implement `cd`.
+    - [ ] Environment Variables: Implement `export`, `unset`, and `env` functionalities.
+    - [ ] Command History: Keep a history of commands entered.
+    - [ ] Job Control: Manage job status (`jobs`, `fg`, `bg`, `kill`).
+
+  - [ ] Signal Handling
+    - [ ] Interrupts: Handle signals like SIGINT (Ctrl+C) and SIGTSTP (Ctrl+Z).
+    - [ ] Custom Signal Handling: Implement custom signal handlers for shell-specific behavior.
+
+  - [ ] Input/Output Redirection
+    - [ ] File Descriptors: Redirect input/output streams to/from files.
+    - [ ] Pipes: Connect the output of one command to the input of another.
+
+  - [ ] Environment Management
+    - [ ] Environment Variables: Set and access environment variables.
+    - [ ] Path Resolution: Manage `PATH` for locating executables.
+
+  - [ ] Command Substitution
+    - [ ] Evaluation: Handle commands within `$(...)` or `` `...` ``.
+
+  - [ ] Wildcard Expansion
+    - [ ] Globbing: Expand wildcard characters like `*`, `?`, and `[...]`.
+
+  - [ ] Scripting Capabilities
+    - [ ] Control Structures: Implement if-else, loops (for, while), and case statements.
+    - [ ] Function Definitions: Support shell functions.
+
+  - [ ] Error Handling
+    - [ ] Exit Statuses: Handle and report process exit statuses.
+    - [ ] Error Messages: Provide informative error messages.
+
+  - [ ] User Input and Output
+    - [ ] Prompts: Display prompts and read user input.
+    - [ ] Command Completion: Implement tab-completion features.
+
+  - [ ] Configuration Files
+    - [ ] Initialization: Read and apply settings from configuration files like `.bashrc` or `.profile`.
+
+  - [ ] Security Considerations
+    - [ ] Permissions: Manage user permissions and access control.
+    - [ ] Sanitization: Handle and sanitize input to prevent injection attacks.
+
+  - [ ] Extensibility
+    - [ ] Plugins/Extensions: Allow for modular extensions or plugins to add functionality.
+
+  - [ ] Interactive Features
+    - [ ] Line Editing: Implement line-editing capabilities (e.g., cursor movement, history navigation).
+    - [ ] Tab Completion: Support automatic completion of commands and file names.
+
