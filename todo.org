@@ -42,8 +42,8 @@
     - [ ] Exit Statuses: Handle and report process exit statuses.
     - [ ] Error Messages: Provide informative error messages.
 
-  - [ ] User Input and Output
-    - [ ] Prompts: Display prompts and read user input.
+  - [-] User Input and Output
+    - [X] Prompts: Display prompts and read user input.
     - [ ] Command Completion: Implement tab-completion features.
 
   - [ ] Configuration Files
