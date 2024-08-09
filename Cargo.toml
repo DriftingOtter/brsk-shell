@@ -2,6 +2,13 @@
 name = "brsk"
 version = "0.1.0"
 edition = "2021"
+license = "GPL-2.0-or-later"
+authors = ["Daksh Kaul", "daksh <dakshkaul7790@gmail.com>"]
+readme  = "README.md"
+
+repository = "https://github.com/DriftingOtter/brsk-shell.git"
+
+description = "brsk (pronounced: brisk) is a personal project shell made in Rust."
 
 [dependencies]
 users = "0.11.0"
