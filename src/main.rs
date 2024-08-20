@@ -1,4 +1,5 @@
-use std::{env, fs};
+use std::env;
+use std::fs::{self, OpenOptions};
 use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -11,10 +12,16 @@ fn main() {
 
     // creating log file for command history
     let mut log_path: String = String::new();
+
     if find_history_log().is_some() {
         log_path = find_history_log().unwrap();
     } else {
-        create_log_file();
+        match create_log_file() {
+            Some(path) => log_path = path,
+            None    => {
+                eprintln!("Could not creat log file");
+            },
+        };
     }
 
     loop {
@@ -49,7 +56,7 @@ fn main() {
             }
 
             // Save executed command to log/history
-            if !create_log(log_path.clone(), input, return_code) {
+            if create_log(&log_path, &input, return_code).is_none() {
                 eprintln!("Could not save executed command to log file");
             }
         }
@@ -126,25 +133,25 @@ fn execute_command(command: &str, args: Vec<String>) -> Option<isize> {
 
 fn find_history_log() -> Option<String> {
     let default_log_path: String = format!("/home/{}/.brsk_history", 
-        env::var("USER").unwrap_or_default());
-
+        env::var("USER").unwrap().trim());
     match fs::metadata(default_log_path.clone()) {
         Ok(_)  => return Some(default_log_path),
         Err(_) => return None,
     }
 }
 
-fn create_log_file() -> bool {
+fn create_log_file() -> Option<String> {
     let default_log_path: String = format!("/home/{}/.brsk_history", 
-        env::var("USER").unwrap_or_default());
+        env::var("USER").unwrap().trim());
 
-    match fs::write(default_log_path, "") {
-        Ok(_) => return true,
-        Err(_) => return false,
+
+    match fs::write(default_log_path.clone(), "") {
+        Ok(_) => return Some(default_log_path),
+        Err(_) => return None,
     }
 }
 
-fn create_log(log_path: String, command: String, return_code: isize) -> bool {
+fn create_log(log_path: &str, command: &str, return_code: isize) -> Option<()> {
     let unix_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
@@ -152,8 +159,13 @@ fn create_log(log_path: String, command: String, return_code: isize) -> bool {
 
     let log = format!("{},{},{}", unix_time, return_code, command);
 
-    match fs::write(log_path, log) {
-        Ok(_)  => return true,
-        Err(_) => return false,
+    match OpenOptions::new().append(true).open(log_path) {
+        Ok(mut file) => {
+            if let Err(_) = file.write_all(log.as_bytes()) {
+                return None;
+            }
+            return Some(());
+        }
+        Err(_) => None,
     }
 }
