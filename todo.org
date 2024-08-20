@@ -3,7 +3,7 @@
     - [X] Tokenization: Break input into commands and arguments.
     - [ ] Redirection: Handle input/output redirection (e.g., `>`, `<`, `>>`).
     - [ ] Pipes: Manage command pipelines (e.g., `|`).
-    - [ ] Background Execution: Support background processes (e.g., `&`).
+    - [X] Background Execution: Support background processes (e.g., `&`).
 
   - [ ] Command Execution
     - [ ] Process Creation: Use system calls like `fork()` to create processes.
@@ -13,7 +13,7 @@
   - [-] Built-in Commands
     - [X] Changing Directory: Implement `cd`.
     - [ ] Environment Variables: Implement `export`, `unset`, and `env` functionalities.
-    - [ ] Command History: Keep a history of commands entered.
+    - [X] Command History: Keep a history of commands entered.
     - [ ] Job Control: Manage job status (`jobs`, `fg`, `bg`, `kill`).
 
   - [ ] Signal Handling
