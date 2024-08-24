@@ -2,6 +2,31 @@
   - [-] Command Parsing
     - [X] Tokenization: Break input into commands and arguments.
     - [ ] Redirection: Handle input/output redirection (e.g., `>`, `<`, `>>`).
+
+        1. **`<` (Input Redirection):** 
+
+        This symbol is used to redirect the input of a command from a file. For example:
+
+           command < inputfile
+
+        Here, `command` will read its input from `inputfile` instead of the standard input (usually the keyboard).
+
+        2. **`>` (Output Redirection):** 
+
+        This symbol redirects the output of a command to a file, overwriting the file if it already exists. For example:
+
+           command > outputfile
+
+        Here, `command` will send its output to `outputfile`, replacing the file's current contents. If `outputfile` does not exist, it will be created.
+
+        3. **`>>` (Append Redirection):** 
+
+        This symbol also redirects the output of a command to a file, but it appends the output to the end of the file rather than overwriting it. For example:
+
+           command >> outputfile
+
+        Here, `command` will send its output to `outputfile`, but it will add the output to the end of the file, preserving the existing contents.
+
     - [ ] Pipes: Manage command pipelines (e.g., `|`).
     - [X] Background Execution: Support background processes (e.g., `&`).
 
