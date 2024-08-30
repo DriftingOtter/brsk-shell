@@ -6,7 +6,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 use std::time::{SystemTime, UNIX_EPOCH};
-use signal_hook::{consts::SIGINT, iterator::Signals};
+use signal_hook::{consts::SIGINT, consts::SIGTERM, consts::SIGKILL, iterator::Signals};
 
 fn main() {
     // capture SIGINT && Other Unix Signals
@@ -52,8 +52,7 @@ fn main() {
 
         // Read user input
         let mut input = String::new();
-        if let Err(err) = io::stdin().read_line(&mut input) {
-            eprintln!("{}", err);
+        if let Err(err) = io::stdin().read_line(&mut input) { eprintln!("{}", err);
             continue;
         }
 
@@ -73,6 +72,7 @@ fn main() {
                 "exit" => exit(0),
                 _ => return_code = execute_command(&command, args).unwrap(),
             }
+
 
             // Save executed command to log/history
             if create_log(&log_path, &input, return_code).is_none() {
@@ -114,13 +114,13 @@ fn change_directory(args: Vec<String>, cwd: PathBuf) {
     // Get directory from args || default to home if none provided
     let target_path = args.get(0).map_or_else(
         || format!("/home/{}/", env::var("USER").unwrap_or_default()),
-        |loc| {
+        |location| {
             // Absolute path
-            if loc.starts_with('/') {
-                format!("{}{}", cwd.to_str().unwrap_or(""), loc)
+            if location.starts_with('/') {
+                format!("{}{}", cwd.to_str().unwrap_or(""), location)
             } else {
                 // Relative path
-                format!("{}/{}", cwd.to_str().unwrap_or(""), loc)
+                format!("{}/{}", cwd.to_str().unwrap_or(""), location)
             }
         }
     );
@@ -220,11 +220,11 @@ fn set_signal_tap() {
                     println!("");
                     exit(0);
                 }
-                15 => {
+                SIGTERM => {
                     println!("");
                     return;
                 },
-                9  => {
+                SIGKILL => {
                     println!("");
                     exit(0);
                 },

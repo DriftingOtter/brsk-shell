@@ -43,6 +43,62 @@
 
   - [ ] Signal Handling
     - [ ] Interrupts: Handle signals like SIGINT (Ctrl+C) and SIGTSTP (Ctrl+Z).
+        SIGINT (Signal Interrupt):
+            Number: 2
+            Description: Sent to a process when the user types the interrupt character (usually Ctrl+C) in the terminal. It typically causes the process to terminate, though it can be caught and handled by the process.
+
+        SIGTERM (Signal Terminate):
+            Number: 15
+            Description: A request to terminate a process gracefully. It allows the process to clean up resources and exit in an orderly manner. This is the default signal sent by commands like kill if no signal is specified.
+
+        SIGKILL (Signal Kill):
+            Number: 9
+            Description: Forces a process to terminate immediately. It cannot be caught, blocked, or ignored by the process. This is used when a process does not terminate with SIGTERM.
+
+        SIGQUIT (Signal Quit):
+            Number: 3
+            Description: Similar to SIGINT, but also causes the process to produce a core dump, which is useful for debugging. It’s usually triggered by typing Ctrl+).
+
+        SIGHUP (Signal Hang Up):
+            Number: 1
+            Description: Sent to a process when its controlling terminal is closed. It is often used to tell a process to reinitialize or reload its configuration files.
+
+        SIGUSR1 (Signal User Defined 1):
+            Number: 10 (on most systems)
+            Description: Reserved for user-defined purposes. Processes can handle this signal in any way they choose, and it’s often used for custom behavior.
+
+        SIGUSR2 (Signal User Defined 2):
+            Number: 12 (on most systems)
+            Description: Similar to SIGUSR1, this signal is also reserved for user-defined purposes and can be used for custom actions.
+
+        SIGSEGV (Signal Segmentation Violation):
+            Number: 11
+            Description: Sent when a process attempts to access an invalid memory location (segmentation fault). This is usually a sign of a bug in the program.
+
+        SIGPIPE (Signal Pipe):
+            Number: 13
+            Description: Sent to a process when it tries to write to a pipe that has been closed on the other end. This usually results in the process being terminated unless it handles the signal.
+
+        SIGALRM (Signal Alarm):
+            Number: 14
+            Description: Sent when a timer set by the alarm function expires. It’s used for handling timeouts and scheduling.
+
+        SIGCHLD (Signal Child):
+            Number: 17
+            Description: Sent to a process when a child process terminates or stops. This is often used by parent processes to handle or clean up after child processes.
+
+        SIGSTOP (Signal Stop):
+            Number: 19
+            Description: Stops (pauses) a process. Unlike SIGTSTP, this signal cannot be caught or ignored. It’s used by the system to pause processes.
+
+        SIGCONT (Signal Continue):
+            Number: 18
+            Description: Resumes a process that was stopped by SIGSTOP or SIGTSTP.
+
+        SIGTSTP (Signal Terminal Stop):
+            Number: 20
+            Description: Sent when the user types the stop character (usually Ctrl+Z) in the terminal. It stops (pauses) the process, but the process can catch and handle this signal.
+
     - [ ] Custom Signal Handling: Implement custom signal handlers for shell-specific behavior.
 
   - [ ] Input/Output Redirection
