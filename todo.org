@@ -1,7 +1,7 @@
 * Shell Implementation TODO List
   - [-] Command Parsing
     - [X] Tokenization: Break input into commands and arguments.
-    - [ ] Redirection: Handle input/output redirection (e.g., `>`, `<`, `>>`).
+    - [X] Redirection: Handle input/output redirection (e.g., `>`, `<`, `>>`).
 
         1. **`<` (Input Redirection):** 
 
