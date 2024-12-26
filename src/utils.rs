@@ -41,13 +41,14 @@ pub fn parse_input(input: String) -> Vec<(String, Vec<String>, Option<String>)> 
 }
 
 pub fn execute_command(command: &str, args: Vec<String>, input_redirect: Option<String>) -> Option<isize> {
-    let args_slice: Vec<&OsStr> = args.iter().map(AsRef::as_ref).collect();
-
     // Create the base command
     let mut cmd = Command::new(command);
     
-    // Add the arguments to the command
-    cmd.args(args_slice);
+    // Only add arguments if there are any
+    if !args.is_empty() {
+        let args_slice: Vec<&OsStr> = args.iter().map(AsRef::as_ref).collect();
+        cmd.args(args_slice);
+    }
 
     // If input is provided (input redirect), handle stdin redirection
     if let Some(input) = input_redirect {
@@ -60,7 +61,6 @@ pub fn execute_command(command: &str, args: Vec<String>, input_redirect: Option<
                         return Some(-1);
                     }
                 }
-
                 // Wait for the command to complete
                 match cmd_process.wait() {
                     Ok(status) => status.code().map(|code| code as isize),
@@ -114,7 +114,7 @@ pub fn is_input_redirect(command: &str) -> Option<(String, String)> {
         Ok(content) => Some((output, content)),
         Err(err) => {
             eprintln!("Error reading file: {}", err);
-            None
+            return None;
         }
     }
 }

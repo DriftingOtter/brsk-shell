@@ -38,7 +38,7 @@ fn main() {
         let command_queue = utils::parse_input(input.clone());
 
         // Run execution on all vectored commands
-        for (command, args, input_redirect) in command_queue {
+        for (command, args, _input_redirect) in command_queue {
             let mut return_code = 0;
             
             // Handle built-in commands
@@ -51,12 +51,11 @@ fn main() {
                     exit(0);
                 }
                 _ => {
-                    println!("command: {}, args: {:?}, input: {:?}", command, args, input_redirect);
-                    
                     // Check for input redirection
                     if let Some((cmd, input)) = utils::is_input_redirect(&input) {
                         // Execute command with input redirection
-                        match utils::execute_command(&cmd, args, Some(input)) {
+                        
+                        match utils::execute_command(&cmd, vec![], Some(input)) {
                             Some(code) => return_code = code,
                             None => {
                                 eprintln!("Error executing command with input redirection");
