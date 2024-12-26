@@ -34,21 +34,46 @@ fn main() {
             continue;
         }
 
-        // Parse user input into a vector of command tuples
+        // Parse user input into a vector of command tuples (command, args, input_redirection)
         let command_queue = utils::parse_input(input.clone());
 
-        let mut return_code = 0;
-
         // Run execution on all vectored commands
-        for (command, args, input) in command_queue {
+        for (command, args, input_redirect) in command_queue {
+            let mut return_code = 0;
+            
+            // Handle built-in commands
             match command.as_str() {
                 "cd" => {
-                    // Save current working directory for preserved memory of location
-                    let cwd = env::current_dir().unwrap_or_default();
+                    let cwd = env::current_dir().unwrap_or_default(); // Get the current working directory
                     inbuilts::change_directory(args, cwd);
                 }
-                "exit" => exit(0), 
-                _ => return_code = utils::execute_command(&command, args).unwrap(),
+                "exit" => {
+                    exit(0);
+                }
+                _ => {
+                    println!("command: {}, args: {:?}, input: {:?}", command, args, input_redirect);
+                    
+                    // Check for input redirection
+                    if let Some((cmd, input)) = utils::is_input_redirect(&input) {
+                        // Execute command with input redirection
+                        match utils::execute_command(&cmd, args, Some(input)) {
+                            Some(code) => return_code = code,
+                            None => {
+                                eprintln!("Error executing command with input redirection");
+                                return_code = -1;
+                            }
+                        }
+                    } else {
+                        // Execute command without input redirection
+                        match utils::execute_command(&command, args, None) {
+                            Some(code) => return_code = code,
+                            None => {
+                                eprintln!("Error executing command");
+                                return_code = -1;
+                            }
+                        }
+                    }
+                }
             }
 
             // Save executed command to log/history

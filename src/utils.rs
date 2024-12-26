@@ -2,40 +2,22 @@ use std::fs;
 use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::fs::OpenOptions;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
-
-pub fn execute_command(command: &str, args: Vec<String>) -> Option<isize> {
-    let args_slice: Vec<&OsStr> = args.iter().map(AsRef::as_ref).collect();
-
-    match Command::new(command).args(args_slice).spawn() {
-        Ok(mut cmd) => match cmd.wait() {
-            Ok(status) => status.code().map(|code| code as isize),
-            Err(err) => {
-                eprintln!("Error waiting for command: {}", err);
-                return Some(-1);
-            }
-        },
-        Err(err) => {
-            eprintln!("Error starting command: {}", err);
-            return Some(-1);
-        },
-    }
-}
 
 pub fn display_prompt() -> io::Result<()> {
     print!("$ ");
     io::stdout().flush()
 }
 
-pub fn parse_input(input: String) -> Vec<(String, Vec<String>, String)> {
+pub fn parse_input(input: String) -> Vec<(String, Vec<String>, Option<String>)> {
     if input.is_empty() {
         return Vec::new();
     }
 
     let trimmed_input = input.trim();
 
-    let mut command_list: Vec<(String, Vec<String>, String)> = Vec::new();
+    let mut command_list: Vec<(String, Vec<String>, Option<String>)> = Vec::new();
 
     // Split commands by "&&"
     let segments: Vec<&str> = trimmed_input.split("&&").map(|s| s.trim()).collect();
@@ -45,108 +27,96 @@ pub fn parse_input(input: String) -> Vec<(String, Vec<String>, String)> {
         let command = tokens.next().unwrap_or_default().to_string();
         let args: Vec<String> = tokens.map(String::from).collect();
 
-        // Use the original input as a placeholder for the third part
-        command_list.push((command, args, input.clone()));
+        // Check if there's input redirection (<) in the command
+        let mut input_redirect: Option<String> = None;
+        if let Some(input_part) = command.split('<').nth(1) {
+            input_redirect = Some(input_part.trim().to_string());
+        }
+
+        // Add the command, arguments, and input redirect to the list
+        command_list.push((command, args, input_redirect));
     }
 
     return command_list;
 }
 
-pub fn is_input_redirect(command: &str) -> Option<String> {
-    if !(command.to_string().split("<").collect::<Vec<_>>()).is_empty() {
-        let parts: Vec<&str> = command.split('<').collect();
+pub fn execute_command(command: &str, args: Vec<String>, input_redirect: Option<String>) -> Option<isize> {
+    let args_slice: Vec<&OsStr> = args.iter().map(AsRef::as_ref).collect();
 
-        if parts.len() != 2 {
-            return None;
-        }
+    // Create the base command
+    let mut cmd = Command::new(command);
+    
+    // Add the arguments to the command
+    cmd.args(args_slice);
 
-        let output = parts[0].trim().to_string();
-        let input = parts[1].trim().to_string();
+    // If input is provided (input redirect), handle stdin redirection
+    if let Some(input) = input_redirect {
+        match cmd.stdin(Stdio::piped()).spawn() {
+            Ok(mut cmd_process) => {
+                // Write the input to the stdin pipe of the command
+                if let Some(mut stdin_handle) = cmd_process.stdin.take() {
+                    if let Err(err) = stdin_handle.write_all(input.as_bytes()) {
+                        eprintln!("Error writing to stdin: {}", err);
+                        return Some(-1);
+                    }
+                }
 
-        let input_contents: Option<String> = match fs::read_to_string(input) {
-            Ok(content) => Some(content),
-            Err(err)    => {
-                eprintln!("{}", err);
-                None
+                // Wait for the command to complete
+                match cmd_process.wait() {
+                    Ok(status) => status.code().map(|code| code as isize),
+                    Err(err) => {
+                        eprintln!("Error waiting for command: {}", err);
+                        return Some(-1);
+                    }
+                }
+            },
+            Err(err) => {
+                eprintln!("Error spawning command with input redirect: {}", err);
+                return Some(-1);
             }
-        };
-
-        let parsed_command: String = format!("{}{}", output, input_contents.unwrap());
-        return Some(parsed_command);
+        }
     } else {
-        return None;
+        // If no input redirect, just execute normally
+        match cmd.spawn() {
+            Ok(mut cmd_process) => match cmd_process.wait() {
+                Ok(status) => status.code().map(|code| code as isize),
+                Err(err) => {
+                    eprintln!("Error waiting for command: {}", err);
+                    return Some(-1);
+                }
+            },
+            Err(err) => {
+                eprintln!("Error starting command: {}", err);
+                return Some(-1);
+            }
+        }
     }
 }
 
-pub fn is_output_redirect(command: &str) -> Option<isize> {
-    let command = command.trim();
+pub fn is_input_redirect(command: &str) -> Option<(String, String)> {
+    let mut parts: Vec<&str> = command.trim().split('<').collect();
 
-    // Determine the type of redirection and split the command
-    let (cmd_part, file, append) = if command.contains(">>") {
-        let parts: Vec<&str> = command.split(">>").collect();
-        if parts.len() == 2 {
-            (parts[0].trim(), parts[1].trim(), true)
-        } else {
-            eprintln!("Invalid command syntax");
-            return None;
-        }
-    } else if command.contains('>') {
-        let parts: Vec<&str> = command.split('>').collect();
-        if parts.len() == 2 {
-            (parts[0].trim(), parts[1].trim(), false)
-        } else {
-            eprintln!("Invalid command syntax");
-            return None;
-        }
-    } else {
-        return None;
-    };
-
-    // Parse the command part
-    let command_queue = parse_input(cmd_part.to_string());
-
-    for (command, args, _input) in command_queue {
-        // Prepare command arguments
-        let args_slice: Vec<&OsStr> = args.iter().map(AsRef::as_ref).collect();
-
-        // Execute the command
-        let output = match Command::new(&command).args(args_slice).output() {
-            Ok(output) => output,
-            Err(err) => {
-                eprintln!("Error starting command: {}", err);
-                return None;
-            }
-        };
-
-        // Check command execution status
-        if !output.status.success() {
-            eprintln!("Command failed with status: {:?}", output.status);
-            return Some(-1);
-        }
-
-        // Prepare file options based on the type of redirection
-        let mut file_options = OpenOptions::new();
-        file_options.create(true);
-
-        if append {
-            file_options.append(true);
-        } else {
-            file_options.write(true).truncate(true);
-        }
-
-        // Write output to the file
-        if let Err(err) = file_options
-            .open(file)
-            .and_then(|mut file| file.write_all(&output.stdout))
-        {
-            eprintln!("Error writing to file: {}", err);
-            return Some(-1);
-        }
-
-        return output.status.code().map(|code| code as isize);
+    // Trim each part in parts
+    for part in parts.iter_mut() {
+        *part = part.trim();
     }
 
-    return None;
+    // Check if there are exactly two parts
+    if parts.len() != 2 {
+        return None;
+    }
+
+    let output = parts[0].to_string(); // Command and its args
+    let input_file = parts[1].to_string().trim().to_string();  // Input file path
+
+    // Read the contents of the file specified by input
+    match fs::read_to_string(input_file) {
+        Ok(content) => Some((output, content)),
+        Err(err) => {
+            eprintln!("Error reading file: {}", err);
+            None
+        }
+    }
 }
 
 pub fn create_log(log_path: &str, command: &str, return_code: isize) -> Option<()> {
