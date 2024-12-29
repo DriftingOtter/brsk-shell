@@ -41,7 +41,7 @@
     - [X] Command History: Keep a history of commands entered.
     - [ ] Job Control: Manage job status (`jobs`, `fg`, `bg`, `kill`).
 
-  - [ ] Signal Handling
+  - [X] Signal Handling
     - [ ] Interrupts: Handle signals like SIGINT (Ctrl+C) and SIGTSTP (Ctrl+Z).
         SIGINT (Signal Interrupt):
             Number: 2
@@ -119,8 +119,8 @@
     - [ ] Control Structures: Implement if-else, loops (for, while), and case statements.
     - [ ] Function Definitions: Support shell functions.
 
-  - [ ] Error Handling
-    - [ ] Exit Statuses: Handle and report process exit statuses.
+  - [-] Error Handling
+    - [X] Exit Statuses: Handle and report process exit statuses.
     - [ ] Error Messages: Provide informative error messages.
 
   - [-] User Input and Output

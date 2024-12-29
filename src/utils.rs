@@ -1,13 +1,23 @@
 use std::fs;
 use std::ffi::OsStr;
-use std::io::{self, Write};
+use std::io::{self, Write, stdout};
 use std::fs::OpenOptions;
 use std::process::{Command, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
+use crossterm::{
+    cursor::{MoveTo, position},
+    execute,
+};
 
 pub fn display_prompt() -> io::Result<()> {
     print!("$ ");
     io::stdout().flush()
+}
+
+pub fn reset_cursor_position() {
+    let (_prompt_x, prompt_y) = position().unwrap();
+    execute!(stdout(), MoveTo(0, prompt_y)).unwrap();
+    stdout().flush().unwrap();
 }
 
 pub fn parse_input(input: String) -> Vec<(String, Vec<String>, Option<String>)> {
@@ -107,10 +117,36 @@ pub fn is_input_redirect(command: &str) -> Option<(String, String)> {
     }
 
     let output = parts[0].to_string(); // Command and its args
-    let input_file = parts[1].to_string().trim().to_string();  // Input file path
+    let input  = parts[1].to_string().trim().to_string();  // Input file path
 
     // Read the contents of the file specified by input
-    match fs::read_to_string(input_file) {
+    match fs::read_to_string(input) {
+        Ok(content) => Some((output, content)),
+        Err(err) => {
+            eprintln!("Error reading file: {}", err);
+            return None;
+        }
+    }
+}
+
+pub fn is_output_redirect(command: &str) -> Option<(String, String)> {
+    let mut parts: Vec<&str> = command.trim().split('>').collect();
+
+    // Trim each part in parts
+    for part in parts.iter_mut() {
+        *part = part.trim();
+    }
+
+    // Check if there are exactly two parts
+    if parts.len() != 2 {
+        return None;
+    }
+
+    let output = parts[1].to_string();                     // Input file path
+    let input  = parts[0].to_string().trim().to_string();  // Command and its args
+
+    // Read the contents of the file specified by input
+    match fs::read_to_string(input) {
         Ok(content) => Some((output, content)),
         Err(err) => {
             eprintln!("Error reading file: {}", err);
